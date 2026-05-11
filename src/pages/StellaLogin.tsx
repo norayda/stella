@@ -9,7 +9,8 @@
  */
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Mail, KeyRound, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { ArrowLeft, Mail, KeyRound, Eye, EyeOff, Sparkles, AlertCircle } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 type Lang = 'fr' | 'en';
 
@@ -32,6 +33,8 @@ const I18N = {
     create: 'Créer un compte',
     toast_success: '✅ Connexion réussie — bon retour !',
     toast_forgot: '📧 Un email de réinitialisation t\'a été envoyé.',
+    err_credentials: 'Email ou mot de passe incorrect.',
+    err_generic: 'Une erreur est survenue. Réessaie.',
   },
   en: {
     back: 'Back',
@@ -51,6 +54,8 @@ const I18N = {
     create: 'Create an account',
     toast_success: '✅ Signed in — welcome back!',
     toast_forgot: '📧 A reset email has been sent.',
+    err_credentials: 'Incorrect email or password.',
+    err_generic: 'Something went wrong. Please try again.',
   },
 } as const;
 
@@ -61,6 +66,8 @@ const StellaLogin: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPwd, setShowPwd] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const toastTimer = useRef<number | null>(null);
   const emailRef = useRef<HTMLInputElement>(null);
 
@@ -83,11 +90,33 @@ const StellaLogin: React.FC = () => {
     return () => { if (toastTimer.current) window.clearTimeout(toastTimer.current); };
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValid) return;
-    showToast(t.toast_success);
-    window.setTimeout(() => navigate('/home'), 900);
+    if (!isValid || authLoading) return;
+    setAuthError(null);
+    setAuthLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (error) {
+        setAuthError(t.err_credentials);
+        return;
+      }
+      showToast(t.toast_success);
+      window.setTimeout(() => navigate('/home'), 900);
+    } catch {
+      setAuthError(t.err_generic);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleForgot = async () => {
+    if (!emailOk) { showToast(lang === 'fr' ? 'Saisis ton email d\'abord.' : 'Enter your email first.'); return; }
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+    showToast(error ? t.err_generic : t.toast_forgot);
   };
 
   return (
@@ -410,18 +439,25 @@ const StellaLogin: React.FC = () => {
             <button
               type="button"
               className="lg-forgot"
-              onClick={() => showToast(t.toast_forgot)}
+              onClick={handleForgot}
             >
               {t.forgot}
             </button>
 
+            {authError && (
+              <p style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: '#E04A42', margin: 0 }} role="alert">
+                <AlertCircle size={14} strokeWidth={2.5} />
+                {authError}
+              </p>
+            )}
+
             <button
               type="submit"
               className="lg-cta"
-              disabled={!isValid}
-              aria-disabled={!isValid}
+              disabled={!isValid || authLoading}
+              aria-disabled={!isValid || authLoading}
             >
-              <span>{t.cta}</span>
+              <span>{authLoading ? '…' : t.cta}</span>
               <span className="lg-cta-sub">{t.cta_sub}</span>
             </button>
           </form>

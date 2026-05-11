@@ -8,6 +8,7 @@
  * @flowName "Onboarding"
  */
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { speakStella, stopSpeaking, buildWelcomeMessage } from '../lib/stellaVoice';
 import { useModes } from '../lib/stellaModes';
 import {
@@ -139,6 +140,7 @@ const TRIP_ICONS: Record<string, React.ReactNode> = {
 };
 
 const StellaPersonalization: React.FC = () => {
+  const navigate = useNavigate();
   const [lang, setLang] = useState<Lang>('fr');
   const [goals, setGoals] = useState<string[]>([]);
   const [level, setLevelState] = useState<Level | null>(null);
@@ -165,7 +167,11 @@ const StellaPersonalization: React.FC = () => {
   const t = I18N[lang];
 
   const toggleGoal = (id: string) =>
-    setGoals((v) => (v.includes(id) ? v.filter((x) => x !== id) : [...v, id]));
+    setGoals((v) => {
+      const next = v.includes(id) ? v.filter((x) => x !== id) : [...v, id];
+      try { window.sessionStorage.setItem('stella:goals', JSON.stringify(next)); } catch { /* noop */ }
+      return next;
+    });
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -182,7 +188,9 @@ const StellaPersonalization: React.FC = () => {
 
   const handleSubmit = () => {
     if (!isValid) return;
+    try { window.sessionStorage.setItem('stella:voice', voice ?? ''); } catch { /* noop */ }
     showToast(t.toast_done);
+    window.setTimeout(() => navigate('/vehicle'), 900);
   };
 
   useEffect(() => {

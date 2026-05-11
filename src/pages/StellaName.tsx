@@ -10,6 +10,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, ArrowRight, Settings, Lock, Mail, KeyRound, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 type Lang = 'fr' | 'en';
 
@@ -37,6 +38,10 @@ const I18N = {
     counter: (n: number, max: number) => `${n} / ${max}`,
     preview: (name: string) => `Enchantée, ${name} ✨`,
     toast: (name: string) => `Bienvenue ${name} — on continue l'aventure !`,
+    err_email_taken: 'Cette adresse email est déjà utilisée.',
+    err_pwd_weak: 'Le mot de passe est trop court (min. 6 caractères).',
+    err_generic: 'Une erreur est survenue. Réessaie.',
+    confirm_email: '📧 Vérifie ta boîte mail pour confirmer ton compte !',
   },
   en: {
     lang_fr: 'Français',
@@ -61,6 +66,10 @@ const I18N = {
     counter: (n: number, max: number) => `${n} / ${max}`,
     preview: (name: string) => `Nice to meet you, ${name} ✨`,
     toast: (name: string) => `Welcome ${name} — let's keep going!`,
+    err_email_taken: 'This email address is already in use.',
+    err_pwd_weak: 'Password is too short (min. 6 characters).',
+    err_generic: 'Something went wrong. Please try again.',
+    confirm_email: '📧 Check your inbox to confirm your account!',
   },
 } as const;
 
@@ -77,6 +86,8 @@ const StellaName: React.FC = () => {
   const [showPwd2, setShowPwd2] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const toastTimer = useRef<number | null>(null);
 
@@ -108,12 +119,35 @@ const StellaName: React.FC = () => {
     } catch { /* noop */ }
   };
 
-  const handleSubmit = (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!isValid) return;
-    try { window.sessionStorage.setItem('stella:nickname', trimmed); } catch { /* noop */ }
-    showToast(t.toast(trimmed));
-    window.setTimeout(() => navigate('/personalization'), 700);
+    if (!isValid || authLoading) return;
+    setAuthError(null);
+    setAuthLoading(true);
+    try {
+      const { error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password: pwd,
+        options: { data: { nickname: trimmed } },
+      });
+      if (error) {
+        if (error.message.toLowerCase().includes('already')) {
+          setAuthError(t.err_email_taken);
+        } else if (error.message.toLowerCase().includes('password') || error.message.toLowerCase().includes('weak')) {
+          setAuthError(t.err_pwd_weak);
+        } else {
+          setAuthError(t.err_generic);
+        }
+        return;
+      }
+      try { window.sessionStorage.setItem('stella:nickname', trimmed); } catch { /* noop */ }
+      showToast(t.confirm_email);
+      window.setTimeout(() => navigate('/personalization'), 900);
+    } catch {
+      setAuthError(t.err_generic);
+    } finally {
+      setAuthLoading(false);
+    }
   };
 
   const progress = Math.min(trimmed.length / 3, 1);
@@ -587,17 +621,26 @@ const StellaName: React.FC = () => {
                 )}
               </div>
 
+              {authError && (
+                <p className="sn-field-error" role="alert" style={{ justifyContent: 'center' }}>
+                  <AlertCircle size={13} strokeWidth={2.5} />
+                  <span>{authError}</span>
+                </p>
+              )}
+
               <button
                 type="submit"
                 className="sn-cta"
-                disabled={!isValid}
-                aria-disabled={!isValid}
+                disabled={!isValid || authLoading}
+                aria-disabled={!isValid || authLoading}
               >
                 <span className="sn-cta-label">
-                  {t.cta}
-                  <span className="sn-cta-arrow">
-                    <ArrowRight size={18} strokeWidth={2.5} />
-                  </span>
+                  {authLoading ? '…' : t.cta}
+                  {!authLoading && (
+                    <span className="sn-cta-arrow">
+                      <ArrowRight size={18} strokeWidth={2.5} />
+                    </span>
+                  )}
                 </span>
                 <span className="sn-cta-sub">{t.cta_sub}</span>
               </button>

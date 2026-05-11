@@ -476,7 +476,7 @@ const StellaWelcome: React.FC = () => {
             <button
               type="button"
               className="stella-btn stella-btn-primary"
-              onClick={() => goTo('/personalization')}
+              onClick={() => goTo('/name')}
               aria-label={t.cta_primary}
             >
               <span className="stella-btn-label">{t.cta_primary}</span>

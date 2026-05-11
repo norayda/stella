@@ -8,6 +8,7 @@
  * @flowName "Onboarding"
  */
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Sparkles,
   Car,
@@ -106,6 +107,7 @@ const RECO_ICONS: Record<string, React.ReactNode> = {
 };
 
 const StellaReady: React.FC = () => {
+  const navigate = useNavigate();
   const [lang, setLang] = useState<Lang>('fr');
   const [progress, setProgress] = useState(0);
   const [scanDone, setScanDone] = useState(false);
@@ -808,6 +810,7 @@ const StellaReady: React.FC = () => {
             className="sr-cta"
             disabled={progress < 100}
             aria-disabled={progress < 100}
+            onClick={() => navigate('/home')}
           >
             <span className="sr-cta-label">
               {t.cta}

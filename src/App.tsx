@@ -1,34 +1,36 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ComponentPreviewRouter } from './components/ComponentPreview';
 import { StellaVoiceAssistant } from './components/StellaVoiceAssistant';
+import { AuthProvider } from './context/AuthContext';
 
 /*-krisspy-code-start*/
 // Auto-generated imports from manifest
-import DesignSystemTest from '/src/pages/DesignSystemTest.tsx';
-import NotFound from '/src/pages/NotFound.tsx';
-import StellaWelcome from '/src/pages/StellaWelcome.tsx';
-import StellaName from '/src/pages/StellaName.tsx';
-import StellaPersonalization from '/src/pages/StellaPersonalization.tsx';
-import StellaVehicle from '/src/pages/StellaVehicle.tsx';
-import StellaReady from '/src/pages/StellaReady.tsx';
-import StellaHome from '/src/pages/StellaHome.tsx';
-import StellaSOS from '/src/pages/StellaSOS.tsx';
-import StellaCopilot from '/src/pages/StellaCopilot.tsx';
-import StellaGarage from '/src/pages/StellaGarage.tsx';
-import StellaTrips from '/src/pages/StellaTrips.tsx';
-import StellaRewards from '/src/pages/StellaRewards.tsx';
-import StellaMaintenanceHistory from '/src/pages/StellaMaintenanceHistory.tsx';
-import StellaModes from '/src/pages/StellaModes.tsx';
-import StellaProfile from '/src/pages/StellaProfile.tsx';
-import StellaSettings from '/src/pages/StellaSettings.tsx';
-import StellaAccessibility from '/src/pages/StellaAccessibility.tsx';
-import StellaChangeVehicle from '/src/pages/StellaChangeVehicle.tsx';
-import StellaContact from '/src/pages/StellaContact.tsx';
-import StellaFavorites from '/src/pages/StellaFavorites.tsx';
-import StellaInterests from '/src/pages/StellaInterests.tsx';
-import StellaNotifications from '/src/pages/StellaNotifications.tsx';
-import StellaPayment from '/src/pages/StellaPayment.tsx';
-import StellaLogin from '/src/pages/StellaLogin.tsx';
+import DesignSystemTest from './pages/DesignSystemTest';
+import NotFound from './pages/NotFound';
+import StellaWelcome from './pages/StellaWelcome';
+import StellaName from './pages/StellaName';
+import StellaPersonalization from './pages/StellaPersonalization';
+import StellaVehicle from './pages/StellaVehicle';
+import StellaReady from './pages/StellaReady';
+import StellaHome from './pages/StellaHome';
+import StellaSOS from './pages/StellaSOS';
+import StellaCopilot from './pages/StellaCopilot';
+import StellaGarage from './pages/StellaGarage';
+import StellaTrips from './pages/StellaTrips';
+import StellaRewards from './pages/StellaRewards';
+import StellaMaintenanceHistory from './pages/StellaMaintenanceHistory';
+import StellaModes from './pages/StellaModes';
+import StellaProfile from './pages/StellaProfile';
+import StellaSettings from './pages/StellaSettings';
+import StellaAccessibility from './pages/StellaAccessibility';
+import StellaChangeVehicle from './pages/StellaChangeVehicle';
+import StellaContact from './pages/StellaContact';
+import StellaFavorites from './pages/StellaFavorites';
+import StellaInterests from './pages/StellaInterests';
+import StellaNotifications from './pages/StellaNotifications';
+import StellaPayment from './pages/StellaPayment';
+import StellaLogin from './pages/StellaLogin';
+import StellaVehicleHealth from './pages/StellaVehicleHealth';
 
 /*-krisspy-code-end*/
 
@@ -83,6 +85,7 @@ function PageWithLayout({
 
 export default function App() {
   return (
+    <AuthProvider>
     <Router>
       <Routes>
         {/*-krisspy-code-start*/}
@@ -278,6 +281,12 @@ export default function App() {
             <PageWithLayout page={StellaLogin} layouts={[]} />
           </AuthGuard>
         } />
+
+        <Route path="/vehicle-health" element={
+          <AuthGuard requiresAuth={false}>
+            <PageWithLayout page={StellaVehicleHealth} layouts={[]} />
+          </AuthGuard>
+        } />
         {/*-krisspy-code-end*/}
         
         <Route path="/_component/*" element={<ComponentPreviewRouter />} />
@@ -285,5 +294,6 @@ export default function App() {
       </Routes>
       <StellaVoiceAssistant />
     </Router>
+    </AuthProvider>
   );
 }

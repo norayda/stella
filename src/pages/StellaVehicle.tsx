@@ -8,6 +8,7 @@
  * @flowName "Onboarding"
  */
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Sparkles,
   Car,
@@ -267,6 +268,7 @@ const Dropdown: React.FC<DropdownProps> = ({
 };
 
 const StellaVehicle: React.FC = () => {
+  const navigate = useNavigate();
   const [lang, setLang] = useState<Lang>('fr');
   const [brand, setBrand] = useState<string | null>(null);
   const [model, setModel] = useState<string | null>(null);
@@ -326,7 +328,11 @@ const StellaVehicle: React.FC = () => {
 
   const handleSubmit = () => {
     if (!isValid) return;
+    try {
+      window.sessionStorage.setItem('stella:vehicle', JSON.stringify({ brand, model, fuel, year, mileage }));
+    } catch { /* noop */ }
     showToast(notSure ? t.toast_simplified : t.toast_done);
+    window.setTimeout(() => navigate('/ready'), 900);
   };
 
   return (

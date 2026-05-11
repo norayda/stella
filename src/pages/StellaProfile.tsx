@@ -9,6 +9,7 @@
  */
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { useApplyModes, useModes } from '../lib/stellaModes';
 import {
   ArrowLeft,
@@ -75,21 +76,32 @@ const MENU = [
 
 const StellaProfile: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<number | null>(null);
   const [searchQ, setSearchQ] = useState('');
   const [openLex, setOpenLex] = useState<Record<string, boolean>>({});
   const [logoutOpen, setLogoutOpen] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
 
   const nickname = useMemo(() => {
+    if (user?.user_metadata?.nickname) return user.user_metadata.nickname as string;
     try {
       const stored = (window.sessionStorage.getItem('stella:nickname') || '').trim();
       if (stored) return stored;
     } catch { /* noop */ }
-    return 'Marie';
+    return 'Toi';
+  }, [user]);
+
+  const userEmail = user?.email || '';
+
+  const vehicle = useMemo(() => {
+    try {
+      const raw = window.sessionStorage.getItem('stella:vehicle');
+      return raw ? (JSON.parse(raw) as { brand?: string; model?: string; fuel?: string; year?: string }) : null;
+    } catch { return null; }
   }, []);
+  const vehicleName = vehicle ? [vehicle.brand, vehicle.model].filter(Boolean).join(' ') : 'Véhicule non configuré';
+  const vehicleMeta = vehicle ? [vehicle.fuel, vehicle.year].filter(Boolean).join(' · ') : '';
 
   const plan: 'standard' | 'premium' = 'standard';
   useApplyModes();
@@ -123,12 +135,7 @@ const StellaProfile: React.FC = () => {
     window.setTimeout(() => navigate('/'), 700);
   };
 
-  const handleRecoverLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim() || !password.trim()) return;
-    showToast('Compte retrouvé — tes points sont de retour ✨');
-    setEmail(''); setPassword('');
-  };
+
 
   return (
     <>
@@ -811,7 +818,7 @@ const StellaProfile: React.FC = () => {
                   {plan === 'premium' ? '👑 Premium' : '🌱 Standard'}
                 </span>
                 <span className="sp-hero-meta">Membre depuis avril 2026</span>
-                <span className="sp-hero-email">marie.dupont@email.com</span>
+                {userEmail && <span className="sp-hero-email">{userEmail}</span>}
               </div>
             </div>
           </section>
@@ -825,8 +832,8 @@ const StellaProfile: React.FC = () => {
             <span className="sp-vehicle-ico" aria-hidden="true">🚗</span>
             <div className="sp-vehicle-body">
               <span className="sp-vehicle-label">Ma voiture</span>
-              <span className="sp-vehicle-name">Jeep Avenger Electric</span>
-              <span className="sp-vehicle-meta">Noir Carbone · 18 450 km</span>
+              <span className="sp-vehicle-name">{vehicleName}</span>
+              {vehicleMeta && <span className="sp-vehicle-meta">{vehicleMeta}</span>}
             </div>
             <ChevronRight size={18} strokeWidth={2.5} style={{ color: '#B8ACAC' }} />
           </button>

@@ -9,6 +9,7 @@
  */
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import {
   Sparkles,
   ChevronRight,
@@ -25,10 +26,10 @@ type Lang = 'fr' | 'en';
 const I18N = {
   fr: {
     greet_title: (name: string) => `On va où aujourd'hui, ${name} ? 🚗`,
-    greet_sub: 'Ta Jeep Avenger est prête pour un trajet sûr et optimisé.',
+    greet_sub: (car: string) => `Ta ${car} est prête pour un trajet sûr et optimisé.`,
     mark: 'Mon tableau de bord',
     sec_vehicle: 'Statut véhicule',
-    sec_vehicle_sub: 'Jeep Avenger · Électrique',
+    sec_vehicle_sub: (car: string, fuel: string) => `${car} · ${fuel}`,
     battery_label: 'Batterie',
     range_label: 'Autonomie',
     tires_label: 'Pneus',
@@ -41,7 +42,13 @@ const I18N = {
     all_good: 'Tout va bien',
     view_details: 'Voir les détails du véhicule',
     insight_tag: 'Pour toi',
-    insight: 'Recharge après 22h pour économiser jusqu\'à 7 €/mois.',
+    insight_electric: 'Recharge après 22h pour économiser jusqu\'à 7 €/mois.',
+    insight_hybrid: 'En mode électrique sous 50 km/h, tu économises jusqu\'à 15% de carburant.',
+    insight_ice: 'Anticiper les freinages réduit la consommation jusqu\'à 8%.',
+    status_fuel: 'Carburant',
+    status_oil: 'Huile moteur',
+    status_oil_value: 'Bon état',
+    status_hybrid_battery: 'Batterie hybride',
     alert_title: 'Révision dans ~2 mois',
     alert_sub: 'Anticipe pour comparer les devis sans stress.',
     alert_cta: 'Analyser un devis garage',
@@ -80,10 +87,10 @@ const I18N = {
   },
   en: {
     greet_title: (name: string) => `Where are we going today, ${name}? 🚗`,
-    greet_sub: 'Your Jeep Avenger is ready for a safe and optimized drive.',
+    greet_sub: (car: string) => `Your ${car} is ready for a safe and optimized drive.`,
     mark: 'My dashboard',
     sec_vehicle: 'Vehicle status',
-    sec_vehicle_sub: 'Jeep Avenger · Electric',
+    sec_vehicle_sub: (car: string, fuel: string) => `${car} · ${fuel}`,
     battery_label: 'Battery',
     range_label: 'Range',
     tires_label: 'Tires',
@@ -96,7 +103,13 @@ const I18N = {
     all_good: 'All good',
     view_details: 'View vehicle details',
     insight_tag: 'For you',
-    insight: 'Charge after 10 PM to save up to €7/month.',
+    insight_electric: 'Charge after 10 PM to save up to €7/month.',
+    insight_hybrid: 'Using electric mode under 50 km/h saves up to 15% fuel.',
+    insight_ice: 'Anticipating braking can reduce fuel consumption by up to 8%.',
+    status_fuel: 'Fuel',
+    status_oil: 'Engine oil',
+    status_oil_value: 'Good',
+    status_hybrid_battery: 'Hybrid battery',
     alert_title: 'Service coming up in ~2 months',
     alert_sub: 'Plan ahead to compare quotes stress-free.',
     alert_cta: 'Analyze garage quote',
@@ -135,6 +148,16 @@ const I18N = {
   },
 } as const;
 
+type FuelCategory = 'electric' | 'hybrid' | 'ice';
+
+function detectFuelCategory(fuel: string | undefined): FuelCategory {
+  if (!fuel) return 'ice';
+  const f = fuel.toLowerCase();
+  if (f.includes('électrique') || f.includes('electrique') || f.includes('electric') || f.includes('ev') || f.includes('bev')) return 'electric';
+  if (f.includes('hybride') || f.includes('hybrid') || f.includes('phev') || f.includes('hev') || f.includes('rechargeable')) return 'hybrid';
+  return 'ice';
+}
+
 const NAV_ICONS: Record<string, React.ReactNode> = {
   home: <Home size={20} strokeWidth={2.4} />,
   trips: <Map size={20} strokeWidth={2.4} />,
@@ -142,18 +165,35 @@ const NAV_ICONS: Record<string, React.ReactNode> = {
   profile: <User size={20} strokeWidth={2.4} />,
 };
 
-const BATTERY_PCT = 78;
-const RANGE_KM = 312;
-
 const StellaHome: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [lang, setLang] = useState<Lang>('fr');
   const [activeNav, setActiveNav] = useState('home');
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<number | null>(null);
 
   const t = I18N[lang];
-  const nickname = 'Marie';
+
+  // Nickname: Supabase metadata → sessionStorage → fallback
+  const nickname: string =
+    user?.user_metadata?.nickname ||
+    (() => { try { return window.sessionStorage.getItem('stella:nickname') || ''; } catch { return ''; } })() ||
+    (lang === 'fr' ? 'toi' : 'you');
+
+  // Vehicle: from sessionStorage (set during onboarding)
+  const vehicle = (() => {
+    try {
+      const raw = window.sessionStorage.getItem('stella:vehicle');
+      return raw ? (JSON.parse(raw) as { brand?: string; model?: string; fuel?: string }) : null;
+    } catch { return null; }
+  })();
+  const vehicleName = vehicle ? [vehicle.brand, vehicle.model].filter(Boolean).join(' ') : (lang === 'fr' ? 'votre véhicule' : 'your vehicle');
+  const vehicleFuel  = vehicle?.fuel || (lang === 'fr' ? 'Véhicule' : 'Vehicle');
+  const fuelCategory = detectFuelCategory(vehicle?.fuel);
+  const isElectric   = fuelCategory === 'electric';
+  const isHybrid     = fuelCategory === 'hybrid';
+  const insight      = isElectric ? t.insight_electric : isHybrid ? t.insight_hybrid : t.insight_ice;
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -539,7 +579,7 @@ const StellaHome: React.FC = () => {
               <Sparkles size={12} strokeWidth={2.5} /> {t.mark}
             </span>
             <h1 className="sh-h1">{t.greet_title(nickname)}</h1>
-            <p className="sh-sub">{t.greet_sub}</p>
+            <p className="sh-sub">{t.greet_sub(vehicleName)}</p>
           </header>
 
           {/* Hero vehicle card */}
@@ -547,7 +587,7 @@ const StellaHome: React.FC = () => {
             <div className="sh-hero-head">
               <div className="sh-hero-brand">
                 <span className="sh-hero-title">{t.sec_vehicle}</span>
-                <span className="sh-hero-sub">{t.sec_vehicle_sub}</span>
+                <span className="sh-hero-sub">{t.sec_vehicle_sub(vehicleName, vehicleFuel)}</span>
               </div>
               <span className="sh-hero-live">
                 <span className="sh-hero-dot" />
@@ -556,21 +596,57 @@ const StellaHome: React.FC = () => {
             </div>
 
             <div className="sh-data">
-              <div className="sh-data-row">
-                <div className="sh-data-line">
-                  <span className="sh-data-label"><span aria-hidden="true">🔋</span> {t.status_battery}</span>
-                  <span className="sh-data-value ok">78%</span>
+              {/* Row 1: Battery (electric/hybrid) or Fuel level (ICE) */}
+              {(isElectric || isHybrid) ? (
+                <div className="sh-data-row">
+                  <div className="sh-data-line">
+                    <span className="sh-data-label">
+                      <span aria-hidden="true">🔋</span>
+                      {isHybrid ? t.status_hybrid_battery : t.status_battery}
+                    </span>
+                    <span className="sh-data-value ok">78%</span>
+                  </div>
+                  <div className="sh-data-bar" role="progressbar" aria-valuenow={78} aria-valuemin={0} aria-valuemax={100}>
+                    <div className="sh-data-bar-fill" style={{ width: '78%' }} />
+                  </div>
                 </div>
-                <div className="sh-data-bar" role="progressbar" aria-valuenow={78} aria-valuemin={0} aria-valuemax={100}>
-                  <div className="sh-data-bar-fill" style={{ width: '78%' }} />
+              ) : (
+                <div className="sh-data-row">
+                  <div className="sh-data-line">
+                    <span className="sh-data-label"><span aria-hidden="true">⛽</span> {t.status_fuel}</span>
+                    <span className="sh-data-value ok">~60%</span>
+                  </div>
+                  <div className="sh-data-bar" role="progressbar" aria-valuenow={60} aria-valuemin={0} aria-valuemax={100}>
+                    <div className="sh-data-bar-fill" style={{ width: '60%' }} />
+                  </div>
                 </div>
-              </div>
-              <div className="sh-data-row">
-                <div className="sh-data-line">
-                  <span className="sh-data-label"><span aria-hidden="true">🛣️</span> {t.status_range}</span>
-                  <span className="sh-data-value">312 km</span>
+              )}
+              {/* Row 2: Range (electric) / Fuel (hybrid) / Oil (ICE) */}
+              {isElectric ? (
+                <div className="sh-data-row">
+                  <div className="sh-data-line">
+                    <span className="sh-data-label"><span aria-hidden="true">🛣️</span> {t.status_range}</span>
+                    <span className="sh-data-value">312 km</span>
+                  </div>
                 </div>
-              </div>
+              ) : isHybrid ? (
+                <div className="sh-data-row">
+                  <div className="sh-data-line">
+                    <span className="sh-data-label"><span aria-hidden="true">⛽</span> {t.status_fuel}</span>
+                    <span className="sh-data-value ok">~60%</span>
+                  </div>
+                  <div className="sh-data-bar" role="progressbar" aria-valuenow={60} aria-valuemin={0} aria-valuemax={100}>
+                    <div className="sh-data-bar-fill" style={{ width: '60%' }} />
+                  </div>
+                </div>
+              ) : (
+                <div className="sh-data-row">
+                  <div className="sh-data-line">
+                    <span className="sh-data-label"><span aria-hidden="true">🛢️</span> {t.status_oil}</span>
+                    <span className="sh-data-value ok">{t.status_oil_value}</span>
+                  </div>
+                </div>
+              )}
               <div className="sh-data-row">
                 <div className="sh-data-line">
                   <span className="sh-data-label"><span aria-hidden="true">🔧</span> {t.status_service}</span>
@@ -588,7 +664,7 @@ const StellaHome: React.FC = () => {
             <button
               type="button"
               className="sh-hero-cta"
-              onClick={() => showToast(t.toast_details)}
+              onClick={() => navigate('/vehicle-health')}
             >
               {t.view_details}
               <ChevronRight size={16} strokeWidth={2.5} />
@@ -602,7 +678,7 @@ const StellaHome: React.FC = () => {
             </span>
             <div className="sh-insight-text">
               <span className="sh-insight-tag">💡 {t.insight_tag}</span>
-              <span className="sh-insight-line">{t.insight}</span>
+              <span className="sh-insight-line">{insight}</span>
             </div>
           </div>
 
@@ -665,7 +741,7 @@ const StellaHome: React.FC = () => {
                 if (n.id === 'trips') navigate('/trips');
                 else if (n.id === 'perks') navigate('/rewards');
                 else if (n.id === 'profile') navigate('/profile');
-                else if (n.id !== 'home') showToast(t.toast_nav(n.label));
+                else if (n.id !== 'home') showToast(t.toast_nav((n as { id: string; label: string }).label));
               }}
               aria-current={activeNav === n.id ? 'page' : undefined}
             >
