@@ -632,13 +632,18 @@ const StellaReady: React.FC = () => {
 
           {/* Hero card */}
           <div className="sr-hero" aria-label={t.caption}>
-            <img
-              className="sr-hero-photo"
-              src="https://krisspy.blob.core.windows.net/public/images/1778367418020-8rl3fz26jxk.png"
-              alt={vehicleBrand ? `${vehicleBrand} ${vehicleModel}` : 'Véhicule'}
-              loading="eager"
-            />
-            <div className="sr-hero-car" style={{ display: 'none' }}>
+            {vehicleBrand.toLowerCase().includes('jeep') && vehicleModel.toLowerCase().includes('avenger') && (
+              <img
+                className="sr-hero-photo"
+                src="https://krisspy.blob.core.windows.net/public/images/1778367418020-8rl3fz26jxk.png"
+                alt="Jeep Avenger"
+                loading="eager"
+              />
+            )}
+            <div
+              className="sr-hero-car"
+              style={{ display: vehicleBrand.toLowerCase().includes('jeep') && vehicleModel.toLowerCase().includes('avenger') ? 'none' : 'flex' }}
+            >
               <svg className="sr-car-svg" viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg" fill="none">
                 <defs>
                   <linearGradient id="sr-body" x1="0" y1="0" x2="0" y2="1">
