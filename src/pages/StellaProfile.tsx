@@ -103,7 +103,7 @@ const StellaProfile: React.FC = () => {
   const vehicleName = vehicle ? [vehicle.brand, vehicle.model].filter(Boolean).join(' ') : 'Véhicule non configuré';
   const vehicleMeta = vehicle ? [vehicle.fuel, vehicle.year].filter(Boolean).join(' · ') : '';
 
-  const plan: 'standard' | 'premium' = 'standard';
+  const plan = (user?.user_metadata?.plan as 'standard' | 'premium') ?? 'standard';
   useApplyModes();
   const { modes } = useModes();
   const profileLabel =
