@@ -9,6 +9,7 @@
  */
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import {
   Sparkles,
   Car,
@@ -106,28 +107,66 @@ const RECO_ICONS: Record<string, React.ReactNode> = {
   insight: <Radio size={16} strokeWidth={2.5} />,
 };
 
+const FUEL_TAGS: Record<string, { label: string; icon: string }> = {
+  electric:  { label: 'Électrique', icon: '⚡' },
+  hybrid:    { label: 'Hybride',    icon: '🔋' },
+  ice:       { label: '',           icon: '' },
+};
+
+function detectFuelCat(fuel?: string): 'electric' | 'hybrid' | 'ice' {
+  if (!fuel) return 'ice';
+  const f = fuel.toLowerCase();
+  if (f.includes('électrique') || f.includes('electric') || f.includes('ev') || f.includes('bev')) return 'electric';
+  if (f.includes('hybride') || f.includes('hybrid') || f.includes('phev')) return 'hybrid';
+  return 'ice';
+}
+
+const GOAL_LABELS: Record<string, { fr: string; en: string; icon: string }> = {
+  safety:      { fr: 'Sécurité',         en: 'Safety',          icon: '🛡️' },
+  savings:     { fr: 'Économies',         en: 'Savings',         icon: '💰' },
+  comfort:     { fr: 'Confort',           en: 'Comfort',         icon: '🛋️' },
+  eco:         { fr: 'Écologie',          en: 'Eco-driving',     icon: '🌿' },
+  performance: { fr: 'Performance',       en: 'Performance',     icon: '🏎️' },
+  family:      { fr: 'Famille',           en: 'Family',          icon: '👨‍👩‍👧' },
+};
+
 const StellaReady: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [lang, setLang] = useState<Lang>('fr');
   const [progress, setProgress] = useState(0);
   const [scanDone, setScanDone] = useState(false);
 
-  const nickname = 'Marie';
-
-  const vehicleYear = useMemo(() => {
+  const nickname = useMemo(() => {
+    if (user?.user_metadata?.nickname) return user.user_metadata.nickname as string;
     try {
-      const stored = (window.sessionStorage.getItem('stella:vehicle_year') || '').trim();
-      if (stored) {
-        if (stored === '2021-') return lang === 'fr' ? '2021 ou avant' : '2021 or earlier';
-        return stored;
-      }
+      const s = (window.sessionStorage.getItem('stella:nickname') || '').trim();
+      if (s) return s;
     } catch { /* noop */ }
-    return '2024';
-  }, [lang]);
+    return lang === 'fr' ? 'toi' : 'you';
+  }, [user, lang]);
+
+  const vehicle = useMemo(() => {
+    try {
+      const raw = window.sessionStorage.getItem('stella:vehicle');
+      return raw ? (JSON.parse(raw) as { brand?: string; model?: string; fuel?: string; year?: string }) : null;
+    } catch { return null; }
+  }, []);
+
+  const vehicleBrand = vehicle?.brand || '';
+  const vehicleModel = vehicle?.model || '';
+  const vehicleYear  = vehicle?.year  || '';
+  const fuelCat      = detectFuelCat(vehicle?.fuel);
+  const fuelTag      = FUEL_TAGS[fuelCat];
+
+  const goals = useMemo(() => {
+    try {
+      const raw = window.sessionStorage.getItem('stella:goals');
+      return raw ? (JSON.parse(raw) as string[]) : [];
+    } catch { return []; }
+  }, []);
 
   const t = I18N[lang];
-  const vehicleBrand = 'Jeep';
-  const vehicleModel = 'Avenger';
 
   useEffect(() => {
     let raf: number;
@@ -580,7 +619,7 @@ const StellaReady: React.FC = () => {
               <Sparkles size={12} strokeWidth={2.5} /> {t.mark}
             </span>
             <h1 className="sr-h1">
-              {lang === 'fr' ? 'Bienvenue, ' : 'Welcome back, '}
+              {lang === 'fr' ? 'Bienvenue, ' : 'Welcome, '}
               <span className="sr-name">{nickname}</span>
               {' '}{t.wave}
             </h1>
@@ -596,7 +635,7 @@ const StellaReady: React.FC = () => {
             <img
               className="sr-hero-photo"
               src="https://krisspy.blob.core.windows.net/public/images/1778367418020-8rl3fz26jxk.png"
-              alt={`${vehicleBrand} ${vehicleModel}`}
+              alt={vehicleBrand ? `${vehicleBrand} ${vehicleModel}` : 'Véhicule'}
               loading="eager"
             />
             <div className="sr-hero-car" style={{ display: 'none' }}>
@@ -751,12 +790,18 @@ const StellaReady: React.FC = () => {
             </div>
             <div className="sr-vehicle">
               <div className="sr-vehicle-name">
-                {vehicleBrand} {vehicleModel}
-                <span className="sr-tag"><Zap size={10} strokeWidth={3} /> Electric</span>
-                <span className="sr-year">· {vehicleYear}</span>
+                {vehicleBrand || 'Véhicule'} {vehicleModel}
+                {fuelTag.label && (
+                  <span className="sr-tag">
+                    {fuelTag.icon} {fuelTag.label}
+                  </span>
+                )}
+                {vehicleYear && <span className="sr-year">· {vehicleYear}</span>}
               </div>
               <div className="sr-vehicle-meta">
-                <span className="sr-meta-chip"><Gauge size={12} strokeWidth={2.5} /> 18 450 km</span>
+                {vehicle?.fuel && (
+                  <span className="sr-meta-chip"><Zap size={12} strokeWidth={2.5} /> {vehicle.fuel}</span>
+                )}
                 <span className="sr-meta-chip"><Activity size={12} strokeWidth={2.5} /> {t.synced}</span>
               </div>
             </div>
@@ -768,20 +813,35 @@ const StellaReady: React.FC = () => {
               <span className="sr-sec-ico purple"><Activity size={16} strokeWidth={2.5} /></span>
               <span className="sr-sec-title">{t.sec_profile}</span>
             </div>
-            <div className="sr-profile-line">🟡 {t.driver_intermediate}</div>
-            <div className="sr-focus-label">{t.focus_title}</div>
-            <div className="sr-chips">
-              {t.focus.map((f) => (
-                <span key={f.id} className="sr-chip">
-                  {FOCUS_ICONS[f.id]}
-                  <span>{f.label}</span>
-                </span>
-              ))}
-            </div>
-            <span className="sr-access-row">
-              <Accessibility size={14} strokeWidth={2.5} />
-              {t.accessibility_on}
-            </span>
+            {goals.length > 0 ? (
+              <>
+                <div className="sr-focus-label">{t.focus_title}</div>
+                <div className="sr-chips">
+                  {goals.map((id) => {
+                    const g = GOAL_LABELS[id];
+                    if (!g) return null;
+                    return (
+                      <span key={id} className="sr-chip">
+                        <span>{g.icon}</span>
+                        <span>{lang === 'fr' ? g.fr : g.en}</span>
+                      </span>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="sr-focus-label">{t.focus_title}</div>
+                <div className="sr-chips">
+                  {t.focus.map((f) => (
+                    <span key={f.id} className="sr-chip">
+                      {FOCUS_ICONS[f.id]}
+                      <span>{f.label}</span>
+                    </span>
+                  ))}
+                </div>
+              </>
+            )}
           </section>
 
           {/* Reco */}
