@@ -131,20 +131,32 @@ const StellaName: React.FC = () => {
         options: { data: { nickname: trimmed } },
       });
       if (error) {
-        if (error.message.toLowerCase().includes('already')) {
+        const msg = error.message.toLowerCase();
+        if (msg.includes('already') || msg.includes('registered')) {
           setAuthError(t.err_email_taken);
-        } else if (error.message.toLowerCase().includes('password') || error.message.toLowerCase().includes('weak')) {
+        } else if (msg.includes('password') || msg.includes('weak') || msg.includes('short')) {
           setAuthError(t.err_pwd_weak);
+        } else if (msg.includes('invalid api') || msg.includes('api key') || msg.includes('not configured')) {
+          setAuthError('Configuration Supabase manquante — vérifie les variables d\'environnement Vercel.');
+        } else if (msg.includes('email') && msg.includes('disabled')) {
+          setAuthError('Les inscriptions par email sont désactivées dans Supabase (Authentication → Providers).');
+        } else if (msg.includes('rate limit') || msg.includes('too many')) {
+          setAuthError('Trop de tentatives. Attends quelques minutes.');
         } else {
-          setAuthError(t.err_generic);
+          setAuthError(`Erreur Supabase : ${error.message}`);
         }
         return;
       }
       try { window.sessionStorage.setItem('stella:nickname', trimmed); } catch { /* noop */ }
       showToast(t.confirm_email);
       window.setTimeout(() => navigate('/personalization'), 900);
-    } catch {
-      setAuthError(t.err_generic);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('fetch') || msg.includes('network') || msg.includes('CORS')) {
+        setAuthError('Erreur réseau — vérifie les variables VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY dans Vercel.');
+      } else {
+        setAuthError(`Erreur inattendue : ${msg}`);
+      }
     } finally {
       setAuthLoading(false);
     }
