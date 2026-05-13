@@ -9,7 +9,8 @@
  */
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Send, Mic, Home, Map as MapIcon, Star, User, ArrowLeft } from 'lucide-react';
+import { Sparkles, Send, Mic, ArrowLeft } from 'lucide-react';
+import StellaNav from '../components/StellaNav';
 
 type Lang = 'fr' | 'en';
 type Sender = 'user' | 'stella';
@@ -90,12 +91,6 @@ const I18N = {
   },
 } as const;
 
-const NAV_ICONS: Record<string, React.ReactNode> = {
-  home: <Home size={20} strokeWidth={2.4} />,
-  trips: <MapIcon size={20} strokeWidth={2.4} />,
-  perks: <Star size={20} strokeWidth={2.4} />,
-  profile: <User size={20} strokeWidth={2.4} />,
-};
 
 const formatTime = (d: Date) =>
   `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -523,43 +518,13 @@ const StellaCopilot: React.FC = () => {
           cursor: not-allowed;
         }
 
-        /* Bottom nav — same style as home */
-        .sc-nav {
-          position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
-          width: calc(100% - 28px); max-width: 392px;
-          padding: 8px;
-          background: rgba(255,255,255,0.92);
-          backdrop-filter: blur(14px);
-          border-radius: 22px;
-          box-shadow: 0 20px 40px rgba(26,26,46,0.15), 0 0 0 1px rgba(255,255,255,0.6) inset;
-          display: grid; grid-template-columns: repeat(4, 1fr);
-          gap: 4px;
-          z-index: 50;
-        }
-        .sc-nav-btn {
-          border: none; background: transparent;
-          font-family: inherit;
-          display: flex; flex-direction: column; align-items: center; gap: 3px;
-          padding: 10px 6px; border-radius: 14px;
-          font-size: 10.5px; font-weight: 700;
-          color: #8A7A7A;
-          cursor: pointer;
-          transition: all 200ms ease;
-        }
-        .sc-nav-btn svg { transition: transform 200ms ease; }
-        .sc-nav-btn:hover { color: #1A1A2E; }
-        .sc-nav-btn.active {
-          background: linear-gradient(135deg, rgba(255,122,112,0.12) 0%, rgba(107,78,155,0.1) 100%);
-          color: #FF7A70;
-        }
-        .sc-nav-btn.active svg {
-          color: #FF7A70;
-          filter: drop-shadow(0 4px 10px rgba(255,122,112,0.5));
-        }
-
         @media (min-width: 640px) {
           .sc-app { padding: 24px 20px 180px; }
           .sc-h1 { font-size: 26px; }
+        }
+        @media (min-width: 1024px) {
+          .sc-root { padding-left: 220px; justify-content: flex-start; }
+          .sc-app { max-width: 640px; padding-bottom: 32px; }
         }
       `}</style>
 
@@ -682,21 +647,7 @@ const StellaCopilot: React.FC = () => {
           </button>
         </div>
 
-        <nav className="sc-nav" aria-label="Navigation principale">
-          {t.nav.map((n) => (
-            <button
-              key={n.id}
-              type="button"
-              className={`sc-nav-btn ${n.id === 'home' ? '' : ''}`}
-              onClick={() => {
-                if (n.id === 'home') navigate('/home');
-              }}
-            >
-              {NAV_ICONS[n.id]}
-              <span>{n.label}</span>
-            </button>
-          ))}
-        </nav>
+        <StellaNav activePage="home" lang={lang} />
       </div>
     </>
   );

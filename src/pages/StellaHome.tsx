@@ -7,19 +7,16 @@
  * @routes ["/home", "/dashboard"]
  * @flowName "App"
  */
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   Sparkles,
   ChevronRight,
   AlertTriangle,
-  Home,
-  Map,
-  Star,
-  User,
   Lightbulb,
 } from 'lucide-react';
+import StellaNav from '../components/StellaNav';
 
 type Lang = 'fr' | 'en';
 
@@ -158,21 +155,11 @@ function detectFuelCategory(fuel: string | undefined): FuelCategory {
   return 'ice';
 }
 
-const NAV_ICONS: Record<string, React.ReactNode> = {
-  home: <Home size={20} strokeWidth={2.4} />,
-  trips: <Map size={20} strokeWidth={2.4} />,
-  perks: <Star size={20} strokeWidth={2.4} />,
-  profile: <User size={20} strokeWidth={2.4} />,
-};
 
 const StellaHome: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [lang, setLang] = useState<Lang>('fr');
-  const [activeNav, setActiveNav] = useState('home');
-  const [toast, setToast] = useState<string | null>(null);
-  const toastTimer = useRef<number | null>(null);
-
   const t = I18N[lang];
 
   // Nickname: Supabase metadata → sessionStorage → fallback
@@ -194,18 +181,6 @@ const StellaHome: React.FC = () => {
   const isElectric   = fuelCategory === 'electric';
   const isHybrid     = fuelCategory === 'hybrid';
   const insight      = isElectric ? t.insight_electric : isHybrid ? t.insight_hybrid : t.insight_ice;
-
-  const showToast = useCallback((msg: string) => {
-    setToast(msg);
-    if (toastTimer.current) window.clearTimeout(toastTimer.current);
-    toastTimer.current = window.setTimeout(() => setToast(null), 2400);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (toastTimer.current) window.clearTimeout(toastTimer.current);
-    };
-  }, []);
 
   const handleSos = () => {
     navigate('/sos');
@@ -489,66 +464,13 @@ const StellaHome: React.FC = () => {
         }
         .sh-see-rewards:hover { color: #F26158; }
 
-        /* Bottom nav */
-        .sh-nav {
-          position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
-          width: calc(100% - 28px); max-width: 392px;
-          padding: 8px;
-          background: rgba(255,255,255,0.92);
-          backdrop-filter: blur(14px);
-          border-radius: 22px;
-          box-shadow: 0 20px 40px rgba(26,26,46,0.15), 0 0 0 1px rgba(255,255,255,0.6) inset;
-          display: grid; grid-template-columns: repeat(4, 1fr);
-          gap: 4px;
-          z-index: 50;
-        }
-        .sh-nav-btn {
-          border: none; background: transparent;
-          font-family: inherit;
-          display: flex; flex-direction: column; align-items: center; gap: 3px;
-          padding: 10px 6px; border-radius: 14px;
-          font-size: 10.5px; font-weight: 700;
-          color: #8A7A7A;
-          cursor: pointer;
-          transition: all 200ms ease;
-          position: relative;
-        }
-        .sh-nav-btn svg { transition: transform 200ms ease; }
-        .sh-nav-btn:hover { color: #1A1A2E; }
-        .sh-nav-btn.active {
-          background: linear-gradient(135deg, rgba(255,122,112,0.12) 0%, rgba(107,78,155,0.1) 100%);
-          color: #FF7A70;
-        }
-        .sh-nav-btn.active svg {
-          color: #FF7A70;
-          filter: drop-shadow(0 4px 10px rgba(255,122,112,0.5));
-          transform: translateY(-1px);
-        }
-        .sh-nav-btn.active::after {
-          content: ""; position: absolute; bottom: 4px; left: 50%;
-          transform: translateX(-50%);
-          width: 4px; height: 4px; border-radius: 50%;
-          background: #FF7A70;
-          box-shadow: 0 0 8px rgba(255,122,112,0.8);
-        }
-
-        /* Toast */
-        .sh-toast {
-          position: fixed; bottom: 96px; left: 50%;
-          transform: translate(-50%, 20px);
-          background: #1A1A2E; color: #FFF;
-          padding: 12px 22px; border-radius: 50px;
-          font-size: 13px; font-weight: 700;
-          box-shadow: 0 20px 50px rgba(26,26,46,0.25);
-          z-index: 200; opacity: 0;
-          transition: transform 320ms cubic-bezier(0.22,1,0.36,1), opacity 250ms ease;
-          pointer-events: none;
-        }
-        .sh-toast.show { transform: translate(-50%, 0); opacity: 1; }
-
         @media (min-width: 640px) {
           .sh-app { padding: 32px 20px 108px; }
           .sh-h1 { font-size: 26px; }
+        }
+        @media (min-width: 1024px) {
+          .sh-root { padding-left: 220px; justify-content: flex-start; }
+          .sh-app { max-width: 640px; padding-bottom: 32px; }
         }
       `}</style>
 
@@ -729,31 +651,7 @@ const StellaHome: React.FC = () => {
           </button>
         </main>
 
-        {/* Bottom nav */}
-        <nav className="sh-nav" aria-label="Navigation principale">
-          {t.nav.map((n) => (
-            <button
-              key={n.id}
-              type="button"
-              className={`sh-nav-btn ${activeNav === n.id ? 'active' : ''}`}
-              onClick={() => {
-                setActiveNav(n.id);
-                if (n.id === 'trips') navigate('/trips');
-                else if (n.id === 'perks') navigate('/rewards');
-                else if (n.id === 'profile') navigate('/profile');
-                else if (n.id !== 'home') showToast(t.toast_nav((n as { id: string; label: string }).label));
-              }}
-              aria-current={activeNav === n.id ? 'page' : undefined}
-            >
-              {NAV_ICONS[n.id]}
-              <span>{n.label}</span>
-            </button>
-          ))}
-        </nav>
-
-        <div className={`sh-toast ${toast ? 'show' : ''}`} role="status" aria-live="polite">
-          {toast}
-        </div>
+        <StellaNav activePage="home" lang={lang} />
       </div>
     </>
   );

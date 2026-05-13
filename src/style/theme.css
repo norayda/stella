@@ -333,3 +333,67 @@ html.stella-reduce-motion *::after {
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
 }
+
+/* ===== STELLA RESPONSIVE LAYOUT ===== */
+
+/* Page wrapper for pages with sidebar */
+.stella-page-outer {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Space for the sidebar on desktop */
+@media (min-width: 1024px) {
+  .stella-page-outer {
+    padding-left: 220px;
+  }
+}
+
+/* Main page container — replaces fixed max-width 420px */
+.stella-page-inner {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* App content — responsive width */
+.stella-app-content {
+  width: 100%;
+  max-width: 420px;
+  padding-bottom: 96px; /* space for bottom nav */
+}
+
+@media (min-width: 768px) {
+  .stella-app-content {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .stella-app-content {
+    max-width: 800px;
+    padding-bottom: 40px; /* sidebar — no bottom spacing needed */
+  }
+}
+
+/* Responsive grids */
+.stella-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (min-width: 768px) {
+  .stella-grid-2 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .stella-grid-2 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

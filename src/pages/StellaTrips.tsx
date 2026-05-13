@@ -9,6 +9,7 @@
  */
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import StellaNav from '../components/StellaNav';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -1740,46 +1741,6 @@ const StellaTrips: React.FC = () => {
         .tv-saved-route { font-size: 13px; font-weight: 800; color: #1A1A2E; }
         .tv-saved-meta { font-size: 11.5px; font-weight: 600; color: #8A7A7A; }
 
-        .tv-nav {
-          position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
-          width: calc(100% - 28px); max-width: 392px;
-          padding: 8px;
-          background: rgba(255,255,255,0.92);
-          backdrop-filter: blur(14px);
-          border-radius: 22px;
-          box-shadow: 0 20px 40px rgba(26,26,46,0.15), 0 0 0 1px rgba(255,255,255,0.6) inset;
-          display: grid; grid-template-columns: repeat(4, 1fr);
-          gap: 4px;
-          z-index: 60;
-        }
-        .tv-nav-btn {
-          border: none; background: transparent;
-          font-family: inherit;
-          display: flex; flex-direction: column; align-items: center; gap: 3px;
-          padding: 10px 6px; border-radius: 14px;
-          font-size: 10.5px; font-weight: 700;
-          color: #8A7A7A;
-          cursor: pointer;
-          transition: all 200ms ease;
-          position: relative;
-        }
-        .tv-nav-btn:hover { color: #1A1A2E; }
-        .tv-nav-btn.active {
-          background: linear-gradient(135deg, rgba(255,122,112,0.12) 0%, rgba(107,78,155,0.1) 100%);
-          color: #FF7A70;
-        }
-        .tv-nav-btn.active svg {
-          color: #FF7A70;
-          filter: drop-shadow(0 4px 10px rgba(255,122,112,0.5));
-        }
-        .tv-nav-btn.active::after {
-          content: ""; position: absolute; bottom: 4px; left: 50%;
-          transform: translateX(-50%);
-          width: 4px; height: 4px; border-radius: 50%;
-          background: #FF7A70;
-          box-shadow: 0 0 8px rgba(255,122,112,0.8);
-        }
-
         .tv-toast {
           position: fixed; bottom: 96px; left: 50%;
           transform: translate(-50%, 20px);
@@ -1796,6 +1757,10 @@ const StellaTrips: React.FC = () => {
         @media (min-width: 640px) {
           .tv-app { padding: 24px 20px 108px; }
           .tv-h1 { font-size: 26px; }
+        }
+        @media (min-width: 1024px) {
+          .tv-root { padding-left: 220px; justify-content: flex-start; }
+          .tv-app { max-width: 640px; padding-bottom: 32px; }
         }
       `}</style>
 
@@ -2217,24 +2182,7 @@ const StellaTrips: React.FC = () => {
           )}
         </main>
 
-        <nav className="tv-nav" aria-label="Navigation principale">
-          <button type="button" className="tv-nav-btn" onClick={() => navigate('/home')}>
-            <HomeNavIcon size={20} strokeWidth={2.4} />
-            <span>Accueil</span>
-          </button>
-          <button type="button" className="tv-nav-btn active" aria-current="page">
-            <MapIcon size={20} strokeWidth={2.4} />
-            <span>Trajets</span>
-          </button>
-          <button type="button" className="tv-nav-btn" onClick={() => navigate('/rewards')}>
-            <StarIcon size={20} strokeWidth={2.4} />
-            <span>Avantages</span>
-          </button>
-          <button type="button" className="tv-nav-btn" onClick={() => navigate('/profile')}>
-            <User size={20} strokeWidth={2.4} />
-            <span>Profil</span>
-          </button>
-        </nav>
+        <StellaNav activePage="trips" />
 
         <div className={`tv-toast ${toast ? 'show' : ''}`} role="status" aria-live="polite">
           {toast}
