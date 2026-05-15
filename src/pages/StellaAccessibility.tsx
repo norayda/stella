@@ -7,7 +7,7 @@
  * @routes ["/settings/accessibility"]
  * @flowName "App"
  */
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Accessibility as AccIcon } from 'lucide-react';
 import { useApplyModes, useModes } from '../lib/stellaModes';
@@ -36,6 +36,9 @@ const StellaAccessibility: React.FC = () => {
   const navigate = useNavigate();
   useApplyModes();
   const { modes, toggle } = useModes();
+  const nickname = useMemo(() => {
+    try { return (window.sessionStorage.getItem('stella:nickname') || '').trim() || 'toi'; } catch { return 'toi'; }
+  }, []);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<number | null>(null);
 
@@ -219,7 +222,7 @@ const StellaAccessibility: React.FC = () => {
           <section className="ac-preview-wrap">
             <span className="ac-preview-label">Aperçu — Voilà à quoi Stella va ressembler pour toi</span>
             <div className={previewClasses}>
-              <span className="ac-preview-title">Bienvenue, Marie</span>
+              <span className="ac-preview-title">Bienvenue, {nickname}</span>
               <span className="ac-preview-text">Un texte typique dans l'app. Ajuste les réglages ci-dessous pour le voir changer en direct.</span>
               <span className="ac-preview-badge">🌿 Éco activé</span>
               <button type="button" className="ac-preview-btn">Lancer la navigation</button>

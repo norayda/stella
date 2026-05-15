@@ -10,6 +10,7 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StellaNav from '../components/StellaNav';
+import { useModes, useApplyModes } from '../lib/stellaModes';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -521,6 +522,8 @@ const LeafletMap: React.FC<LeafletMapProps> = ({ height = 220, from, to, route, 
 // ============================================================
 const StellaTrips: React.FC = () => {
   const navigate = useNavigate();
+  useApplyModes();
+  const { modes } = useModes();
   const [tab, setTab] = useState<Tab>('trajets');
 
   // Tab 1 state
@@ -554,7 +557,18 @@ const StellaTrips: React.FC = () => {
       const stored = (window.sessionStorage.getItem('stella:nickname') || '').trim();
       if (stored) return stored;
     } catch { /* noop */ }
-    return 'Marie';
+    return 'toi';
+  }, []);
+
+  const vehicleName = useMemo(() => {
+    try {
+      const raw = window.sessionStorage.getItem('stella:vehicle');
+      if (raw) {
+        const v = JSON.parse(raw) as { brand?: string; model?: string };
+        return [v.brand, v.model].filter(Boolean).join(' ') || 'ton véhicule';
+      }
+    } catch { /* noop */ }
+    return 'Jeep Avenger';
   }, []);
 
   const [profile] = useState<{ level: Level; accessibility: boolean }>(() => {
@@ -708,7 +722,7 @@ const StellaTrips: React.FC = () => {
       return;
     }
     if (id === 'charge') {
-      setActionResult({ kind: 'card', icon: '⚡', title: "Belib' La Défense", meta: 'Recharge rapide compatible Jeep Avenger', points: 25 });
+      setActionResult({ kind: 'card', icon: '⚡', title: "Belib' La Défense", meta: `Recharge rapide compatible ${vehicleName}`, points: 25 });
       return;
     }
     if (id === 'opt_charge') {
@@ -1784,6 +1798,10 @@ const StellaTrips: React.FC = () => {
             </div>
           </div>
 
+          {modes.eco && (
+            <div className="stella-eco-banner">🌿 Mode Éco actif — Stella privilégie les itinéraires écologiques</div>
+          )}
+
           <div className={`tv-tabs ${tab === 'voyages' ? 'voyages' : ''}`} role="tablist">
             <button
               type="button"
@@ -2113,7 +2131,7 @@ const StellaTrips: React.FC = () => {
                 <span className="tv-eco-ico"><Leaf size={18} strokeWidth={2.5} /></span>
                 <div className="tv-eco-text">
                   <span className="tv-eco-title">🌿 {metrics.co2} kg CO₂ — {metrics.co2Label}</span>
-                  <span className="tv-eco-sub">Jeep Avenger Electric · {fuel === 'electric' ? 'Recharge partenaire' : fuel === 'diesel' ? 'Diesel' : 'Essence'}</span>
+                  <span className="tv-eco-sub">{vehicleName} · {fuel === 'electric' ? 'Recharge partenaire' : fuel === 'diesel' ? 'Diesel' : 'Essence'}</span>
                 </div>
               </div>
 

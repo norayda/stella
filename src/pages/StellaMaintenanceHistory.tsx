@@ -21,6 +21,16 @@ const ITEMS = [
 
 const StellaMaintenanceHistory: React.FC = () => {
   const navigate = useNavigate();
+  const vehicleName = (() => {
+    try {
+      const raw = window.sessionStorage.getItem('stella:vehicle');
+      if (raw) {
+        const v = JSON.parse(raw) as { brand?: string; model?: string };
+        return [v.brand, v.model].filter(Boolean).join(' ') || null;
+      }
+    } catch { /* noop */ }
+    return null;
+  })();
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<number | null>(null);
 
@@ -138,7 +148,7 @@ const StellaMaintenanceHistory: React.FC = () => {
           <header>
             <span className="mh-mark"><Wrench size={12} strokeWidth={2.5} /> Entretien</span>
             <h1 className="mh-h1">Carnet d'entretien</h1>
-            <p className="mh-sub">Historique complet de ton Jeep Avenger Electric.</p>
+            <p className="mh-sub">Historique complet de ton {vehicleName ?? 'Jeep Avenger Electric'}.</p>
           </header>
 
           <div className="mh-list">

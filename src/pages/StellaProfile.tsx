@@ -99,6 +99,8 @@ const StellaProfile: React.FC = () => {
   }, []);
   const vehicleName = vehicle ? [vehicle.brand, vehicle.model].filter(Boolean).join(' ') : 'Véhicule non configuré';
   const vehicleMeta = vehicle ? [vehicle.fuel, vehicle.year].filter(Boolean).join(' · ') : '';
+  const isJeep = vehicle?.brand?.toLowerCase().includes('jeep') ?? false;
+  const [vehicleImgError, setVehicleImgError] = useState(false);
 
   const plan = (user?.user_metadata?.plan as 'standard' | 'premium') ?? 'standard';
   useApplyModes();
@@ -794,7 +796,16 @@ const StellaProfile: React.FC = () => {
             className="sp-vehicle"
             onClick={() => showToast('Ma voiture — bientôt disponible')}
           >
-            <span className="sp-vehicle-ico" aria-hidden="true">🚗</span>
+            <span className="sp-vehicle-ico" aria-hidden="true">
+              {isJeep && !vehicleImgError ? (
+                <img
+                  src="https://www.jeep.fr/content/dam/jeep/crossmarket/model-picker/avenger/MY24/avenger-top.png"
+                  alt=""
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 14, padding: 4 }}
+                  onError={() => setVehicleImgError(true)}
+                />
+              ) : '🚗'}
+            </span>
             <div className="sp-vehicle-body">
               <span className="sp-vehicle-label">Ma voiture</span>
               <span className="sp-vehicle-name">{vehicleName}</span>

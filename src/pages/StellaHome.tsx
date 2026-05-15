@@ -10,6 +10,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useModes, useApplyModes } from '../lib/stellaModes';
 import {
   Sparkles,
   ChevronRight,
@@ -181,6 +182,11 @@ const StellaHome: React.FC = () => {
   const isElectric   = fuelCategory === 'electric';
   const isHybrid     = fuelCategory === 'hybrid';
   const insight      = isElectric ? t.insight_electric : isHybrid ? t.insight_hybrid : t.insight_ice;
+  const isJeep       = vehicle?.brand?.toLowerCase().includes('jeep') ?? false;
+
+  useApplyModes();
+  const { modes } = useModes();
+  const [vehicleImgError, setVehicleImgError] = useState(false);
 
   const handleSos = () => {
     navigate('/sos');
@@ -464,6 +470,21 @@ const StellaHome: React.FC = () => {
         }
         .sh-see-rewards:hover { color: #F26158; }
 
+        /* Vehicle photo */
+        .sh-vehicle-photo {
+          width: 100%; height: 130px;
+          border-radius: 14px;
+          overflow: hidden;
+          background: linear-gradient(135deg, #EEE7F7 0%, #FFE6E3 100%);
+          display: flex; align-items: center; justify-content: center;
+        }
+        .sh-vehicle-img {
+          width: 100%; height: 100%;
+          object-fit: contain;
+          padding: 8px;
+        }
+        .sh-vehicle-svg { width: 100%; height: 100%; }
+
         @media (min-width: 640px) {
           .sh-app { padding: 32px 20px 108px; }
           .sh-h1 { font-size: 26px; }
@@ -496,6 +517,10 @@ const StellaHome: React.FC = () => {
             </div>
           </div>
 
+          {modes.eco && (
+            <div className="stella-eco-banner">🌿 Mode Éco actif — Stella privilégie les conseils écologiques</div>
+          )}
+
           <header>
             <span className="sh-mark">
               <Sparkles size={12} strokeWidth={2.5} /> {t.mark}
@@ -516,6 +541,31 @@ const StellaHome: React.FC = () => {
                 LIVE
               </span>
             </div>
+
+            {isJeep && (
+              <div className="sh-vehicle-photo">
+                {!vehicleImgError ? (
+                  <img
+                    src="https://www.jeep.fr/content/dam/jeep/crossmarket/model-picker/avenger/MY24/avenger-top.png"
+                    alt="Jeep Avenger Electric"
+                    className="sh-vehicle-img"
+                    onError={() => setVehicleImgError(true)}
+                  />
+                ) : (
+                  <svg viewBox="0 0 200 80" fill="none" aria-hidden="true" className="sh-vehicle-svg">
+                    <path d="M18 55 L28 35 Q42 22 72 20 L132 20 Q158 20 170 32 L183 45 L185 55 Z" fill="rgba(107,78,155,0.12)"/>
+                    <path d="M55 38 L65 22 Q80 20 100 20 L132 20 Q148 22 158 32 L165 38 Z" fill="rgba(107,78,155,0.2)"/>
+                    <path d="M58 36 L66 24 Q78 22 98 22 L128 22 L128 36 Z" fill="rgba(255,255,255,0.35)"/>
+                    <path d="M130 36 L130 22 L142 22 Q155 25 162 34 L168 36 Z" fill="rgba(255,255,255,0.25)"/>
+                    <rect x="15" y="52" width="172" height="7" rx="3.5" fill="rgba(26,26,46,0.18)"/>
+                    <circle cx="50" cy="55" r="12" fill="#1A1A2E" opacity="0.7"/>
+                    <circle cx="50" cy="55" r="7" fill="#8A7A7A" opacity="0.7"/>
+                    <circle cx="152" cy="55" r="12" fill="#1A1A2E" opacity="0.7"/>
+                    <circle cx="152" cy="55" r="7" fill="#8A7A7A" opacity="0.7"/>
+                  </svg>
+                )}
+              </div>
+            )}
 
             <div className="sh-data">
               {/* Row 1: Battery (electric/hybrid) or Fuel level (ICE) */}

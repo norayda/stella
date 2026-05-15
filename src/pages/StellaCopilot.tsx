@@ -11,6 +11,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Send, Mic, ArrowLeft } from 'lucide-react';
 import StellaNav from '../components/StellaNav';
+import { useModes, useApplyModes } from '../lib/stellaModes';
 
 type Lang = 'fr' | 'en';
 type Sender = 'user' | 'stella';
@@ -112,12 +113,15 @@ const StellaCopilot: React.FC = () => {
 
   const t = I18N[lang];
 
+  useApplyModes();
+  const { modes } = useModes();
+
   const nickname = useMemo(() => {
     try {
       const stored = (window.sessionStorage.getItem('stella:nickname') || '').trim();
       if (stored) return stored;
     } catch { /* noop */ }
-    return 'Marie';
+    return 'toi';
   }, []);
 
   const pickReply = useCallback((raw: string): string => {
@@ -557,6 +561,10 @@ const StellaCopilot: React.FC = () => {
               >EN</button>
             </div>
           </div>
+
+          {modes.eco && (
+            <div className="stella-eco-banner">🌿 Mode Éco actif — Stella privilégie les conseils écologiques</div>
+          )}
 
           <header className="sc-hero">
             <div className="sc-avatar-wrap">

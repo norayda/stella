@@ -334,6 +334,108 @@ html.stella-reduce-motion *::after {
   scroll-behavior: auto !important;
 }
 
+/* ===== ECO BANNER (shared) ===== */
+.stella-eco-banner {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 12.5px; font-weight: 800;
+  line-height: 1.4;
+  background: linear-gradient(135deg, #DFF5F1 0%, #E8F6EC 100%);
+  border: 1px solid rgba(23,133,108,0.25);
+  color: #0F6B57;
+}
+
+/* ===== DARK MODE ===== */
+html.stella-dark {
+  --stella-bg: #1A1A2E;
+  --stella-bg2: #2A2A3E;
+  --stella-card: #2A2A3E;
+  --stella-border: rgba(255,255,255,0.08);
+  --stella-text: #FFFFFF;
+  --stella-text2: #B8ACCC;
+}
+html.stella-dark body,
+html.stella-dark #root {
+  background: #1A1A2E !important;
+  color: #FFFFFF !important;
+}
+/* Pages root backgrounds */
+html.stella-dark .sh-root,
+html.stella-dark .sp-root,
+html.stella-dark .tv-root,
+html.stella-dark .sr-root,
+html.stella-dark .sc-root,
+html.stella-dark .mo-root,
+html.stella-dark .ac-root,
+html.stella-dark .sg-root,
+html.stella-dark .mh-root {
+  background: linear-gradient(160deg, #1A1A2E 0%, #22203A 100%) !important;
+  color: #FFFFFF !important;
+}
+/* Cards */
+html.stella-dark .sh-data,
+html.stella-dark .sh-alert,
+html.stella-dark .sp-hero,
+html.stella-dark .sp-vehicle,
+html.stella-dark .sp-stat,
+html.stella-dark .sp-sub-card,
+html.stella-dark .mo-row,
+html.stella-dark .sp-menu-row,
+html.stella-dark .sp-lex-card,
+html.stella-dark .sp-lex-item {
+  background: #2A2A3E !important;
+  border-color: rgba(255,255,255,0.08) !important;
+  color: #FFFFFF !important;
+}
+html.stella-dark .sh-data-label,
+html.stella-dark .sh-data-value,
+html.stella-dark .sp-hero-name,
+html.stella-dark .mo-label,
+html.stella-dark .sp-menu-label,
+html.stella-dark .sp-vehicle-name,
+html.stella-dark .sp-stat-value {
+  color: #FFFFFF !important;
+}
+html.stella-dark .sh-sub,
+html.stella-dark .sp-hero-meta,
+html.stella-dark .mo-sub2,
+html.stella-dark .sp-menu-sub,
+html.stella-dark .sp-vehicle-meta,
+html.stella-dark .sp-stat-ico-row {
+  color: #B8ACCC !important;
+}
+/* Nav */
+html.stella-dark .stella-nav {
+  background: rgba(26,26,46,0.96) !important;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08) inset !important;
+}
+html.stella-dark .stella-nav-btn { color: #7A6A9A !important; }
+html.stella-dark .stella-nav-btn:hover { color: #FFFFFF !important; }
+
+/* ===== COLORBLIND MODE ===== */
+html.stella-cb {
+  --stella-coral: #2979FF;
+  --stella-purple: #C2185B;
+  --stella-teal: #00838F;
+  --stella-amber: #E65100;
+}
+html.stella-cb .stella-nav-btn.active,
+html.stella-cb .sh-nav-btn.active,
+html.stella-cb .sp-nav-btn.active { color: #2979FF !important; }
+html.stella-cb .stella-nav-btn.active svg { color: #2979FF !important; filter: drop-shadow(0 4px 10px rgba(41,121,255,0.5)) !important; }
+html.stella-cb .sh-mark,
+html.stella-cb .mo-mark,
+html.stella-cb .sp-sec-ico.coral { color: #2979FF !important; background: rgba(41,121,255,0.12) !important; }
+html.stella-cb .sh-hero-cta,
+html.stella-cb .sp-sub-cta,
+html.stella-cb .mo-switch.on { background: #2979FF !important; }
+html.stella-cb .sh-data-bar-fill { background: linear-gradient(90deg, #2979FF 0%, #1565C0 100%) !important; }
+html.stella-cb .sp-hero { background: linear-gradient(135deg, #2979FF 0%, #C2185B 50%, #1565C0 100%) !important; }
+html.stella-cb .sh-qa-card.coral { background: linear-gradient(135deg, #448AFF 0%, #2979FF 100%) !important; }
+html.stella-cb .sh-qa-card.purple { background: linear-gradient(135deg, #D81B60 0%, #C2185B 100%) !important; }
+
 /* ===== STELLA RESPONSIVE LAYOUT ===== */
 
 /* Page wrapper for pages with sidebar */

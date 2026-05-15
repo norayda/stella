@@ -10,6 +10,7 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StellaNav from '../components/StellaNav';
+import { useModes, useApplyModes } from '../lib/stellaModes';
 import {
   ArrowLeft,
   Sparkles,
@@ -127,6 +128,9 @@ const StellaRewards: React.FC = () => {
   const [expandedSources, setExpandedSources] = useState<Record<string, boolean>>({});
   const rewardsRef = useRef<HTMLDivElement>(null);
 
+  useApplyModes();
+  const { modes } = useModes();
+
   const toggleSource = (id: string) =>
     setExpandedSources((prev) => ({ ...prev, [id]: !prev[id] }));
 
@@ -135,7 +139,7 @@ const StellaRewards: React.FC = () => {
       const stored = (window.sessionStorage.getItem('stella:nickname') || '').trim();
       if (stored) return stored;
     } catch { /* noop */ }
-    return 'Marie';
+    return 'toi';
   }, []);
 
   const showToast = useCallback((msg: string) => {
@@ -814,6 +818,10 @@ const StellaRewards: React.FC = () => {
               Retour
             </button>
           </div>
+
+          {modes.eco && (
+            <div className="stella-eco-banner">🌿 Mode Éco actif — Stella privilégie les conseils écologiques</div>
+          )}
 
           <header>
             <span className="sr-mark">

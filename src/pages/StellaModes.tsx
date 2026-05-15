@@ -19,7 +19,6 @@ const MODES_LIST: ModeRow[] = [
   { id: 'colorblind',    emoji: '🎨', label: 'Mode daltonien',        sub: 'Couleurs adaptées aux daltoniens' },
   { id: 'accessibility', emoji: '♿', label: 'Mode accessibilité',    sub: 'Polices plus grandes, contraste élevé' },
   { id: 'eco',           emoji: '🌿', label: 'Mode éco',              sub: 'Itinéraires et conseils écologiques' },
-  { id: 'newDriver',     emoji: '🔑', label: 'Mode nouvelle conductrice', sub: 'Parcours simples, échangeurs évités' },
   { id: 'voiceNotifs',   emoji: '🔔', label: 'Notifications Stella',  sub: 'Stella te prévient à voix haute',
     toastOn: '✅ Notifications vocales activées', toastOff: '🔕 Notifications vocales désactivées' },
   { id: 'voice',         emoji: '🎙️', label: 'Voix (micro + synthèse)', sub: 'Stella t\'écoute et te répond',
@@ -51,13 +50,31 @@ const StellaModes: React.FC = () => {
     return () => { if (toastTimer.current) window.clearTimeout(toastTimer.current); };
   }, []);
 
+  const speak = useCallback((text: string) => {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.lang = modes.lang === 'en' ? 'en-US' : 'fr-FR';
+    utt.rate = 0.95;
+    utt.pitch = 1.1;
+    window.speechSynthesis.speak(utt);
+  }, [modes.lang]);
+
   const flip = (row: ModeRow) => {
     const currentlyOn = Boolean(modes[row.id]);
     toggle(row.id);
-    if (row.toastOn && !currentlyOn) showToast(row.toastOn);
-    else if (row.toastOff && currentlyOn) showToast(row.toastOff);
+    if (row.toastOn && !currentlyOn) {
+      showToast(row.toastOn);
+      if (row.id === 'voiceNotifs') {
+        const nickname = (() => { try { return (window.sessionStorage.getItem('stella:nickname') || '').trim() || 'toi'; } catch { return 'toi'; } })();
+        speak(`Notifications activées. Je t'avertirai des alertes importantes, ${nickname}.`);
+      }
+      if (row.id === 'voice') {
+        const nickname = (() => { try { return (window.sessionStorage.getItem('stella:nickname') || '').trim() || 'toi'; } catch { return 'toi'; } })();
+        speak(`Bonjour ${nickname} ! Je suis prête à t'écouter.`);
+      }
+    } else if (row.toastOff && currentlyOn) showToast(row.toastOff);
     else if (!currentlyOn && row.id === 'eco') showToast('🌿 Mode Éco activé');
-    else if (!currentlyOn && row.id === 'newDriver') showToast('🔑 Mode Nouvelle Conductrice activé');
     else if (!currentlyOn && row.id === 'dark') showToast('🌙 Mode sombre activé');
     else if (!currentlyOn && row.id === 'colorblind') showToast('🎨 Mode daltonien activé');
     else if (!currentlyOn && row.id === 'accessibility') showToast('♿ Mode accessibilité activé');

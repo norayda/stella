@@ -296,6 +296,19 @@ const newLineId = () => `line_${Date.now()}_${++lineIdCounter}`;
 const StellaGarage: React.FC = () => {
   const navigate = useNavigate();
   const [lang, setLang] = useState<Lang>('fr');
+
+  const vehicleTag = (() => {
+    try {
+      const raw = window.sessionStorage.getItem('stella:vehicle');
+      if (raw) {
+        const v = JSON.parse(raw) as { brand?: string; model?: string; fuel?: string };
+        const name = [v.brand, v.model].filter(Boolean).join(' ');
+        const fuelLabel = v.fuel ? ` · ${v.fuel}` : '';
+        return name ? `${name}${fuelLabel}` : null;
+      }
+    } catch { /* noop */ }
+    return null;
+  })();
   const [docOpen, setDocOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [step, setStep] = useState<Step>('input');
@@ -1543,7 +1556,7 @@ const StellaGarage: React.FC = () => {
                   <BadgeCheck size={11} strokeWidth={3} /> {t.status_analyzed}
                 </span>
                 <span className="sg-tag ev">
-                  <Zap size={11} strokeWidth={3} /> {t.vehicle_tag}
+                  <Zap size={11} strokeWidth={3} /> {vehicleTag ?? t.vehicle_tag}
                 </span>
               </div>
               <span className="sg-doc-tap">
@@ -1730,7 +1743,7 @@ const StellaGarage: React.FC = () => {
             </div>
             <div className="sg-modal-page">
               <div className="sg-modal-logo">AUTO GARAGE · Paris 15e</div>
-              <div className="sg-modal-vehicle">{t.vehicle_tag}</div>
+              <div className="sg-modal-vehicle">{vehicleTag ?? t.vehicle_tag}</div>
               <div className="sg-modal-lines">
                 {QUOTE.lines.map((l, i) => (
                   <div key={i} className="sg-modal-line">
